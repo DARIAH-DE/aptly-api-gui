@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="aptlyapigui">
+  <head>
+    <meta charset="utf-8">
+    <title>DARIAH-DE :: Aptly API GUI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DARIAH-DE">
+    <!-- CSS Imports -->
+    <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/bootstrap.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/bootstrap-responsive.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/application.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/bootstrap-customization.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/bootstrap-modal.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/font-awesome.css">
+    <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/dariah_portal.css" type="text/css" media="screen, projection" />
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+          <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+          <![endif]-->
+    <link rel="shortcut icon" type="image/png" href="https://res.de.dariah.eu/aai/img/page_icon.png" />
+  </head>
+  <body>
+    <div id="content_layout">
+      <div class="span8 main-content-wrapper">
+        <div id="content" class="primary-area">
+          <h1>Aptly Manager</h1>
+
+      <div>
+        <div data-ng-controller="ctrl1">
+
+
+          <form class="form-horizontal">
+            <div class="control-group">
+              <label class="control-label" for="selectRepo">Repository</label>
+              <div class="controls">
+                <select id="selectRepo" ng-model="currentrepo">
+                  <option ng-repeat="repo in repos" value="{{ repo.Name }}">{{ repo.Comment }} ({{ repo.Name }})</option>
+                </select> 
+              </div>
+            </div>
+          </form>
+
+          <div ng-repeat="package in packages[currentrepo]">
+            {{ package.Package }}
+            {{ package.Version }}
+          </div>
+
+        </div>
+      </div>
+       
+
+
+        </div>
+        <div class="row central_logo"></div>
+      </div>
+      <div class="row dfooter footer">
+        <div class="span7">
+          <hr/>
+          <p>Digital Research Infrastructure for the Arts and Humanities.</p>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="https://res.de.dariah.eu/aai/js/jquery-1.8.2.js"></script>
+    <script type="text/javascript" src="https://res.de.dariah.eu/aai/js/bootstrap.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+    <script type="text/javascript">
+var aptlyApiGui = angular.module("aptlyapigui", []);
+
+aptlyApiGui.controller('ctrl1', function($scope,$http) {
+
+  $http.get('api/repos').
+    success(function(data, status, headers, config) {
+      $scope.repos = data;
+      packages = {}
+      console.log('mu')
+
+      $scope.repos.forEach(function(repo) {
+
+          $http.get('api/repos/'+repo.Name+'/packages?format=details').
+            success(function(repodata, status, headers, config) {
+              packages[repo.Name]=repodata;
+              console.log(repodata);
+            }).
+            error(function(repodata, status, headers, config) {
+              // log error
+            });
+
+      });
+      $scope.packages = packages;
+
+    }).
+    error(function(data, status, headers, config) {
+      // log error
+    });
+
+    console.log('buhu')
+
+});
+    </script>
+  </body>
+</html>
+
+
