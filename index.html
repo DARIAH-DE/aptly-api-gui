@@ -40,15 +40,30 @@
             </div>
           </form>
 
-          <div ng-repeat="package in packages[currentrepo]">
-            {{ package.Package }}
-            {{ package.Version }}
-          </div>
+          <table>
 
-        </div>
-      </div>
-       
+            <tr>
+              <th><a >Package</a></th>
+              <th><a >Version</a></th>
+              <th><a >Action</a></th>
+            </tr>
 
+            <tr><th colspan="3"><hr></th></tr>
+
+            <tr ng-repeat="package in packages[currentrepo]">
+              <td>{{ package.Package }}</td>
+              <td>{{ package.Version }}</td>
+              <td>
+                <button ng-click=""><span class="fa fa-share"></span></button>
+                <button ng-click="deletePackage(currentrepo,package);"><span class="fa fa-trash"></span></button>
+              </td>
+            </tr>
+
+            <tr><th colspan="3"><hr></th></tr>
+
+
+
+          </table>
 
         </div>
         <div class="row central_logo"></div>
@@ -68,32 +83,46 @@ var aptlyApiGui = angular.module("aptlyapigui", []);
 
 aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
-  $http.get('api/repos').
-    success(function(data, status, headers, config) {
-      $scope.repos = data;
-      packages = {}
-      console.log('mu')
+  $scope.loadData = function () {
+    $http.get('api/repos').
+      success(function(data, status, headers, config) {
+        $scope.repos = data;
+        packages = {}
 
-      $scope.repos.forEach(function(repo) {
+        $scope.repos.forEach(function(repo) {
 
-          $http.get('api/repos/'+repo.Name+'/packages?format=details').
-            success(function(repodata, status, headers, config) {
-              packages[repo.Name]=repodata;
-              console.log(repodata);
-            }).
-            error(function(repodata, status, headers, config) {
-              // log error
-            });
+            $http.get('api/repos/'+repo.Name+'/packages?format=details').
+              success(function(repodata, status, headers, config) {
+                packages[repo.Name]=repodata;
+              }).
+              error(function(repodata, status, headers, config) {
+                alert("Error loading data!!");
+              });
 
+        });
+        $scope.packages = packages;
+
+      }).
+      error(function(data, status, headers, config) {
+        // log error
       });
-      $scope.packages = packages;
+  };
 
-    }).
-    error(function(data, status, headers, config) {
-      // log error
-    });
+  //initial load
+  $scope.loadData();
 
-    console.log('buhu')
+  $scope.deletePackage = function (repo,package) {
+    if (confirm("Really delete "+package.Package+" v. "+package.Version+"?")) {
+      $http.delete('api/repos/'+repo+'/packages', {headers:{'Content-Type':'application/json'}, data:{PackageRefs: [package.Key]}}).
+        success(function(data, status, headers, config) {
+          console.log('ja');
+          $scope.loadData();
+        }).
+        error(function(repodata, status, headers, config) {
+          // log error
+        });
+    }
+  };
 
 });
     </script>
