@@ -65,6 +65,17 @@
 
           </table>
 
+
+          <form class="form-horizontal">
+            <div class="control-group">
+              <label class="control-label" for="refreshRepo">Refresh</label>
+              <div class="controls">
+                <button ng-click="publishUpdate();" id="refreshRepo"><span class="fa fa-refresh"></span></button>
+              </div>
+            </div>
+          </form>
+
+
         </div>
         <div class="row central_logo"></div>
       </div>
@@ -82,6 +93,36 @@
 var aptlyApiGui = angular.module("aptlyapigui", []);
 
 aptlyApiGui.controller('ctrl1', function($scope,$http) {
+
+  $scope.publishUpdate = function () {
+
+    $http.get('api/publish').
+      success(function(publishedrepos, status, headers, config) {
+        publishedrepos.forEach(function(pubrepo) {
+          if (pubrepo.Prefix == '.') {
+            repoprefix = ':.'
+          } else {
+            repoprefix = pubrepo.Prefix
+          }
+
+          console.log('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution))
+
+          $http.put('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution), {headers:{'Content-Type':'application/json'}, data:{}}).
+            success(function(data, status, headers, config) {
+            console.log('ja');
+          }).
+          error(function(repodata, status, headers, config) {
+            alert('Failed to update published repos!');
+          });
+
+        });
+
+      }).
+      error(function(publishedrepos, status, headers, config) {
+        alert('Failed to load published repos!');
+      });    
+
+  };
 
   $scope.loadData = function () {
     $http.get('api/repos').
