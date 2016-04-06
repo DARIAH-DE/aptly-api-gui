@@ -25,59 +25,71 @@
         <div id="content" class="primary-area">
           <h1>Aptly Manager</h1>
 
-      <div>
-        <div data-ng-controller="ctrl1">
+          <div>
+            <div data-ng-controller="ctrl1">
 
 
-          <form class="form-horizontal">
-            <div class="control-group">
-              <label class="control-label" for="selectRepo">Repository</label>
-              <div class="controls">
-                <select id="selectRepo" ng-model="currentrepo">
-                  <option ng-repeat="repo in repos" value="{{ repo.Name }}">{{ repo.Comment }} ({{ repo.Name }})</option>
-                </select> 
-              </div>
+              <form class="form-horizontal">
+                <div class="control-group">
+                  <label class="control-label" for="selectRepo">Repository</label>
+                  <div class="controls">
+                    <select id="selectRepo" ng-model="currentrepo">
+                      <option ng-repeat="repo in repos" value="{{ repo.Name }}">{{ repo.Comment }} ({{ repo.Name }})</option>
+                    </select> 
+                  </div>
+                </div>
+              </form>
+
+              <table>
+
+                <tr>
+                  <th><a >Package</a></th>
+                  <th><a >Version</a></th>
+                  <th><a >Copy</a></th>
+                  <th><a >Delete</a></th>
+                </tr>
+
+                <tr><th colspan="4"><hr></th></tr>
+
+                <tr ng-repeat="package in packages[currentrepo]">
+                  <td>{{ package.Package }}</td>
+                  <td>{{ package.Version }}</td>
+                  
+                  <td>
+                    <form class="form-inline">
+                      <select id="copyToRepo" ng-model="targetrepo">
+                        <option ng-repeat="otherrepo in reposWithOutPackage(package)" value="{{ otherrepo }}">{{ otherrepo }}</option>
+                      </select> 
+                      <button ng-click="copyPackageToRepo(package,targetrepo)" ng-disabled="targetrepo == undefined"><span class="fa fa-share"></span></button>
+                    </form>
+                  </td>
+                  <td><button ng-click="deletePackage(currentrepo,package);"><span class="fa fa-trash"></span></button></td>
+                </tr>
+
+                <tr><th colspan="4"><hr></th></tr>
+
+
+
+              </table>
+
+
+              <form class="form-horizontal">
+                <div class="control-group">
+                  <label class="control-label" for="refreshRepo">Re-Publish</label>
+                  <div class="controls">
+                    <button ng-click="publishUpdate();" id="refreshRepo"><span class="fa fa-refresh"></span></button>
+                  </div>
+                </div>
+              </form>
+
+
+
+              {{ packages }}
+
             </div>
-          </form>
-
-          <table>
-
-            <tr>
-              <th><a >Package</a></th>
-              <th><a >Version</a></th>
-              <th><a >Action</a></th>
-            </tr>
-
-            <tr><th colspan="3"><hr></th></tr>
-
-            <tr ng-repeat="package in packages[currentrepo]">
-              <td>{{ package.Package }}</td>
-              <td>{{ package.Version }}</td>
-              <td>
-                <button ng-click=""><span class="fa fa-share"></span></button>
-                <button ng-click="deletePackage(currentrepo,package);"><span class="fa fa-trash"></span></button>
-              </td>
-            </tr>
-
-            <tr><th colspan="3"><hr></th></tr>
-
-
-
-          </table>
-
-
-          <form class="form-horizontal">
-            <div class="control-group">
-              <label class="control-label" for="refreshRepo">Refresh</label>
-              <div class="controls">
-                <button ng-click="publishUpdate();" id="refreshRepo"><span class="fa fa-refresh"></span></button>
-              </div>
-            </div>
-          </form>
-
-
+            <div class="row central_logo"></div>
+          </div>
         </div>
-        <div class="row central_logo"></div>
       </div>
       <div class="row dfooter footer">
         <div class="span7">
@@ -109,7 +121,6 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
           $http.put('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution), {headers:{'Content-Type':'application/json'}, data:{}}).
             success(function(data, status, headers, config) {
-            console.log('ja');
           }).
           error(function(repodata, status, headers, config) {
             alert('Failed to update published repos!');
@@ -124,6 +135,29 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
   };
 
+  $scope.reposWithOutPackage = function (package) {
+    var reposwithouthispackage = [];
+    $scope.repos.forEach(function(looprepo) {
+      if ($scope.packages[looprepo.Name].indexOf(package) < 0) {
+        reposwithouthispackage.push(looprepo.Name);
+      };
+    });
+    return reposwithouthispackage;
+  };
+
+  $scope.copyPackageToRepo = function (package,targetrepo) {
+    if (confirm("Really copy "+package.Package+" "+package.Version+" to "+targetrepo+"?")) {
+      $http.post('api/repos/'+encodeURIComponent(targetrepo)+'/packages', {headers:{'Content-Type':'application/json'}, data:{PackageRefs: [package.Key]}}).
+        success(function(data, status, headers, config) {
+          console.log('jo');
+        }).
+        error(function(repodata, status, headers, config) {
+          alert("Failed to copy "+package.Package+" "+package.Version+" to "+targetrepo+"!");
+        });
+
+    }
+  };
+
   $scope.loadData = function () {
     $http.get('api/repos').
       success(function(data, status, headers, config) {
@@ -132,7 +166,7 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
         $scope.repos.forEach(function(repo) {
 
-            $http.get('api/repos/'+repo.Name+'/packages?format=details').
+            $http.get('api/repos/'+encodeURIComponent(repo.Name)+'/packages?format=details').
               success(function(repodata, status, headers, config) {
                 packages[repo.Name]=repodata;
               }).
@@ -156,7 +190,6 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
     if (confirm("Really delete "+package.Package+" v. "+package.Version+"?")) {
       $http.delete('api/repos/'+repo+'/packages', {headers:{'Content-Type':'application/json'}, data:{PackageRefs: [package.Key]}}).
         success(function(data, status, headers, config) {
-          console.log('ja');
           $scope.loadData();
         }).
         error(function(repodata, status, headers, config) {
