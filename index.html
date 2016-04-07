@@ -17,11 +17,13 @@
     [ng\:cloak], [ng-cloak], .ng-cloak {
       display: none;
     }
+    form , .form-horizontal .control-group {
+      margin: 0;
+    }
+    #mainselection, #maintable{
+      margin-bottom: 30px;
+    }
     </style>
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-        <!--[if lt IE 9]>
-          <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-          <![endif]-->
     <link rel="shortcut icon" type="image/png" href="https://res.de.dariah.eu/aai/img/page_icon.png" />
   </head>
   <body>
@@ -34,17 +36,18 @@
             <div data-ng-controller="ctrl1">
 
               <form class="form-horizontal">
-                <div class="control-group">
+                <div id="mainselection" class="control-group">
                   <label class="control-label" for="selectRepo">Repository</label>
                   <div class="controls">
                     <select id="selectRepo" ng-model="currentrepo">
                       <option ng-repeat="repo in repos" value="{{ repo.Name }}">{{ repo.Comment }} ({{ repo.Name }})</option>
                     </select> 
+                   <button ng-click="loadData();" id="reload"><span class="fa fa-refresh"></span></button>
                   </div>
                 </div>
               </form>
 
-              <table>
+              <table id="maintable">
 
                 <tr>
                   <th><a >Package</a></th>
@@ -78,7 +81,15 @@
                 <div class="control-group">
                   <label class="control-label" for="refreshRepo">Re-Publish</label>
                   <div class="controls">
-                    <button ng-click="publishUpdate();" id="refreshRepo"><span class="fa fa-refresh"></span></button>
+                    <button ng-click="publishUpdate();" id="refreshRepo"><span class="fa fa-external-link-square"></span></button>
+                  </div>
+                </div>
+              </form>
+              <form action="api/graph.png" class="form-horizontal">
+                <div class="control-group">
+                  <label class="control-label" for="refreshRepo">Graph</label>
+                  <div class="controls">
+                    <button type="submit"><span class="fa fa-tree"></span></button>
                   </div>
                 </div>
               </form>
@@ -104,11 +115,14 @@ var aptlyApiGui = angular.module("aptlyapigui", ['angular.filter']);
 
 aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
+  // update the published repos
   $scope.publishUpdate = function () {
 
+    // get all published repos
     $http.get('api/publish').
       success(function(publishedrepos, status, headers, config) {
         publishedrepos.forEach(function(pubrepo) {
+          // the root prefix is a special case
           if (pubrepo.Prefix == '.') {
             repoprefix = ':.'
           } else {
@@ -117,6 +131,7 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
           console.log('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution))
 
+          // re-publish the repo
           $http.put('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution), {headers:{'Content-Type':'application/json'}, data:{}}).
             success(function(data, status, headers, config) {
           }).
@@ -133,19 +148,22 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
   };
 
-  $scope.containsPackageKey = function(hash,key) {
+  // check whether package is in a repo
+  $scope.containsPackageKey = function(repohash,packagekey) {
     var foundkey = false;
-    hash.forEach(function(onepackage){
-      if (onepackage['Key'] == key) {
+    repohash.forEach(function(onepackage){
+      if (onepackage['Key'] == packagekey) {
         foundkey = true;
       };
     });
     return foundkey;
   }
 
+  // API call to copy packe to another repo
   $scope.copyPackageToRepo = function (package,targetrepo) {
+    // security confirmation
     if (confirm("Really copy "+package.Package+" "+package.Version+" to "+targetrepo+"?")) {
-      $http.post('api/repos/'+encodeURIComponent(targetrepo)+'/packages', {headers:{'Content-Type':'application/json'}, data:{PackageRefs: [package.Key]}}).
+      $http.post('api/repos/'+encodeURIComponent(targetrepo)+'/packages', {headers:{'Content-Type':'application/json'}, data:{"PackageRefs": [package.Key]}}).
         success(function(data, status, headers, config) {
           console.log('jo');
         }).
@@ -156,12 +174,15 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
     }
   };
 
+  // load data from api
   $scope.loadData = function () {
+    // get repos
     $http.get('api/repos').
       success(function(data, status, headers, config) {
         $scope.repos = data;
         packages = {}
 
+        // for each repo, get the repo details
         $scope.repos.forEach(function(repo) {
 
             $http.get('api/repos/'+encodeURIComponent(repo.Name)+'/packages?format=details').
@@ -177,21 +198,24 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
       }).
       error(function(data, status, headers, config) {
-        // log error
+        alert("Error loading data!!");
       });
   };
 
-  //initial load
+  // initial load
   $scope.loadData();
 
+  // delete a package from a repo
   $scope.deletePackage = function (repo,package) {
+    // security confirmation
     if (confirm("Really delete "+package.Package+" v. "+package.Version+"?")) {
-      $http.delete('api/repos/'+repo+'/packages', {headers:{'Content-Type':'application/json'}, data:{PackageRefs: [package.Key]}}).
+      // API call
+      $http.delete('api/repos/'+repo+'/packages', {headers:{'Content-Type':'application/json'}, data:{"PackageRefs": [package.Key]}}).
         success(function(data, status, headers, config) {
           $scope.loadData();
         }).
         error(function(repodata, status, headers, config) {
-          // log error
+          alert("Error deleting package!");
         });
     }
   };
