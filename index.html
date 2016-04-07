@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="aptlyapigui">
+<html lang="en" ng-app="aptlyapigui" ng-cloak>
   <head>
     <meta charset="utf-8">
     <title>DARIAH-DE :: Aptly API GUI</title>
@@ -13,6 +13,11 @@
     <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/bootstrap-modal.css" type="text/css" media="screen, projection" />
     <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/font-awesome.css">
     <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/dariah_portal.css" type="text/css" media="screen, projection" />
+    <style>
+    [ng\:cloak], [ng-cloak], .ng-cloak {
+      display: none;
+    }
+    </style>
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
         <!--[if lt IE 9]>
           <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -27,7 +32,6 @@
 
           <div>
             <div data-ng-controller="ctrl1">
-
 
               <form class="form-horizontal">
                 <div class="control-group">
@@ -58,7 +62,7 @@
                   <td>
                     <form class="form-inline">
                       <select id="copyToRepo" ng-model="targetrepo">
-                        <option ng-repeat="otherrepo in reposWithOutPackage(package)" value="{{ otherrepo }}">{{ otherrepo }}</option>
+                        <option ng-repeat="(otherreponame,otherrepopackages) in packages" ng-if="!containsPackageKey(otherrepopackages,package.Key)" value="{{ otherreponame }}">{{ otherreponame }}</option>
                       </select> 
                       <button ng-click="copyPackageToRepo(package,targetrepo)" ng-disabled="targetrepo == undefined"><span class="fa fa-share"></span></button>
                     </form>
@@ -68,10 +72,7 @@
 
                 <tr><th colspan="4"><hr></th></tr>
 
-
-
               </table>
-
 
               <form class="form-horizontal">
                 <div class="control-group">
@@ -81,10 +82,6 @@
                   </div>
                 </div>
               </form>
-
-
-
-              {{ packages }}
 
             </div>
             <div class="row central_logo"></div>
@@ -101,8 +98,9 @@
     <script type="text/javascript" src="https://res.de.dariah.eu/aai/js/jquery-1.8.2.js"></script>
     <script type="text/javascript" src="https://res.de.dariah.eu/aai/js/bootstrap.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular-filter/0.5.8/angular-filter.min.js"></script>
     <script type="text/javascript">
-var aptlyApiGui = angular.module("aptlyapigui", []);
+var aptlyApiGui = angular.module("aptlyapigui", ['angular.filter']);
 
 aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
@@ -135,15 +133,15 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
   };
 
-  $scope.reposWithOutPackage = function (package) {
-    var reposwithouthispackage = [];
-    $scope.repos.forEach(function(looprepo) {
-      if ($scope.packages[looprepo.Name].indexOf(package) < 0) {
-        reposwithouthispackage.push(looprepo.Name);
+  $scope.containsPackageKey = function(hash,key) {
+    var foundkey = false;
+    hash.forEach(function(onepackage){
+      if (onepackage['Key'] == key) {
+        foundkey = true;
       };
     });
-    return reposwithouthispackage;
-  };
+    return foundkey;
+  }
 
   $scope.copyPackageToRepo = function (package,targetrepo) {
     if (confirm("Really copy "+package.Package+" "+package.Version+" to "+targetrepo+"?")) {
