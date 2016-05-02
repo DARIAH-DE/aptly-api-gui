@@ -95,7 +95,7 @@
               </form>
 
             </div>
-            <div class="row central_logo"></div>
+            <div class="row central_logo_de"></div>
           </div>
         </div>
       </div>
@@ -163,9 +163,9 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
   $scope.copyPackageToRepo = function (package,targetrepo) {
     // security confirmation
     if (confirm("Really copy "+package.Package+" "+package.Version+" to "+targetrepo+"?")) {
-      $http.post('api/repos/'+encodeURIComponent(targetrepo)+'/packages', {headers:{'Content-Type':'application/json'}, data:{"PackageRefs": [package.Key]}}).
+      $http.post('api/repos/'+encodeURIComponent(targetrepo)+'/packages', {"PackageRefs": [package.Key]}).
         success(function(data, status, headers, config) {
-          console.log('jo');
+          $scope.loadData();
         }).
         error(function(repodata, status, headers, config) {
           alert("Failed to copy "+package.Package+" "+package.Version+" to "+targetrepo+"!");
