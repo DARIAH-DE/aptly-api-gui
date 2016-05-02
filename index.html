@@ -20,8 +20,11 @@
     form , .form-horizontal .control-group {
       margin: 0;
     }
-    #mainselection, #maintable{
+    #mainselection {
       margin-bottom: 30px;
+    }
+    #globalfunctions {
+      margin-top: 30px;
     }
     input {
       width: 120px;
@@ -33,6 +36,9 @@
     #filter-label {
       width: 50px;
       text-align: left;
+    }
+    .tablecol{
+      padding-right:5px;
     }
     </style>
     <link rel="shortcut icon" type="image/png" href="https://res.de.dariah.eu/aai/img/page_icon.png" />
@@ -59,7 +65,7 @@
               </form>
 
 
-              <form class="form-horizontal">
+              <form class="form-horizontal" ng-if="currentrepo.length > 0">
                 <div class="form-group">
                   <label class="control-label" id="filter-label">Filter</label>
                   <input class="form-control" type="text" name="search.name" value="" id="id_search_packagename" placeholder="Package Name" ng-model="search.Package" autofocus />
@@ -67,22 +73,22 @@
                 </div>
               </form>
 
-              <table id="maintable">
+              <table id="maintable" ng-if="currentrepo.length > 0">
 
                 <tr>
-                  <th><a >Package</a></th>
-                  <th><a >Version</a></th>
-                  <th><a >Copy</a></th>
+                  <th class="tablecol"><a >Package</a></th>
+                  <th class="tablecol"><a >Version</a></th>
+                  <th class="tablecol"><a >Copy</a></th>
                   <th><a >Delete</a></th>
                 </tr>
 
                 <tr><th colspan="4"><hr></th></tr>
 
                 <tr ng-repeat="package in packages[currentrepo] | filter:search | orderBy : ['Package', 'Version']">
-                  <td>{{ package.Package }}</td>
-                  <td>{{ package.Version }}</td>
+                  <td class="tablecol">{{ package.Package }}</td>
+                  <td class="tablecol">{{ package.Version }}</td>
                   
-                  <td>
+                  <td class="tablecol">
                     <form class="form-inline">
                       <select class="copyToRepo" ng-model="targetrepo">
                         <option ng-repeat="(otherreponame,otherrepopackages) in packages" ng-if="!containsPackageKey(otherrepopackages,package.Key)" value="{{ otherreponame }}">{{ otherreponame }}</option>
@@ -90,29 +96,38 @@
                       <button ng-click="copyPackageToRepo(package,targetrepo)" ng-disabled="targetrepo == undefined"><span class="fa fa-share"></span></button>
                     </form>
                   </td>
-                  <td><button ng-click="deletePackage(currentrepo,package);"><span class="fa fa-trash"></span></button></td>
+                  <td>
+                    <button ng-click="deletePackage(currentrepo,package);"><span class="fa fa-trash"></span></button>
+                    <input id="'{{package.Key}}'" ng-checked="deletepackages[currentrepo].indexOf(fruitName) > -1" ng-click="toggleDeleteSelection(currentrepo,package.Key)" type="checkbox">
+                  </td>
                 </tr>
 
                 <tr><th colspan="4"><hr></th></tr>
 
               </table>
 
-              <form class="form-horizontal">
-                <div class="control-group">
-                  <label class="control-label" for="refreshRepo">Re-Publish</label>
-                  <div class="controls">
-                    <button ng-click="publishUpdate();" id="refreshRepo"><span class="fa fa-external-link-square"></span></button>
-                  </div>
-                </div>
+              <form>
+                <button class="deleteform" ng-disabled="deletepackages[currentrepo].length < 1" ng-if="currentrepo.length > 0"  ng-click="deletePackages(currentrepo);"><span class="fa fa-trash"></span> Delete Selection</button>
               </form>
-              <form action="api/graph.png" class="form-horizontal">
-                <div class="control-group">
-                  <label class="control-label" for="refreshRepo">Graph</label>
-                  <div class="controls">
-                    <button type="submit"><span class="fa fa-tree"></span></button>
+
+              <div id="globalfunctions">
+                <form class="form-horizontal">
+                  <div class="control-group">
+                    <label class="control-label" for="refreshRepo">Re-Publish</label>
+                    <div class="controls">
+                      <button ng-click="publishUpdate();" id="refreshRepo"><span class="fa fa-external-link-square"></span></button>
+                    </div>
                   </div>
-                </div>
-              </form>
+                </form>
+                <form action="api/graph.png" class="form-horizontal">
+                  <div class="control-group">
+                    <label class="control-label" for="refreshRepo">Graph</label>
+                    <div class="controls">
+                      <button type="submit"><span class="fa fa-tree"></span></button>
+                    </div>
+                  </div>
+                </form>
+              </div>
 
             </div>
             <div class="row central_logo_de"></div>
@@ -134,6 +149,16 @@
 var aptlyApiGui = angular.module("aptlyapigui", ['angular.filter']);
 
 aptlyApiGui.controller('ctrl1', function($scope,$http) {
+
+  $scope.deletepackages = {}
+  $scope.toggleDeleteSelection = function (repo,key) {
+    var idx = $scope.deletepackages[repo].indexOf(key);
+    if ( idx > -1) {
+      $scope.deletepackages[repo].splice(idx, 1);
+    } else {
+      $scope.deletepackages[repo].push(key);
+    }
+  };
 
   // update the published repos
   $scope.publishUpdate = function () {
@@ -179,7 +204,7 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
     return foundkey;
   }
 
-  // API call to copy packe to another repo
+  // API call to copy package to another repo
   $scope.copyPackageToRepo = function (package,targetrepo) {
     // security confirmation
     if (confirm("Really copy "+package.Package+" "+package.Version+" to "+targetrepo+"?")) {
@@ -208,6 +233,7 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
             $http.get('api/repos/'+encodeURIComponent(repo.Name)+'/packages?format=details').
               success(function(repodata, status, headers, config) {
                 packages[repo.Name]=repodata;
+                $scope.deletepackages[repo.Name]=[];
               }).
               error(function(repodata, status, headers, config) {
                 alert("Error loading data!!");
@@ -225,20 +251,36 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
   // initial load
   $scope.loadData();
 
-  // delete a package from a repo
-  $scope.deletePackage = function (repo,package) {
+  // delete single package from a repo
+  $scope.deletePackage = function (reponame,package) {
     // security confirmation
     if (confirm("Really delete "+package.Package+" v. "+package.Version+"?")) {
       // API call
-      $http.delete('api/repos/'+repo+'/packages', {headers:{'Content-Type':'application/json'}, data:{"PackageRefs": [package.Key]}}).
-        success(function(data, status, headers, config) {
-          $scope.loadData();
-        }).
-        error(function(repodata, status, headers, config) {
-          alert("Error deleting package!");
-        });
+      $scope.deletePackagesAPICall(reponame,[package.Key]);
     }
   };
+
+  // delete multiple packages from a repo
+  $scope.deletePackages = function (reponame) {
+    // security confirmation
+    if (confirm("Really delete "+$scope.deletepackages[reponame].length+" packages from repository "+reponame+"?")) {
+      // API call
+      $scope.deletePackagesAPICall(reponame,$scope.deletepackages[reponame]);
+    }
+  };
+
+  // delete packages from a repo
+  $scope.deletePackagesAPICall = function (reponame,packagerefs) {
+    // API call
+    $http.delete('api/repos/'+reponame+'/packages', {headers:{'Content-Type':'application/json'}, data:{"PackageRefs": packagerefs}}).
+      success(function(data, status, headers, config) {
+        $scope.loadData();
+      }).
+      error(function(repodata, status, headers, config) {
+        alert("Error deleting package!");
+      });
+  };
+
 
 });
     </script>
