@@ -23,6 +23,17 @@
     #mainselection, #maintable{
       margin-bottom: 30px;
     }
+    input {
+      width: 120px;
+      padding-right: 10px;
+    }
+    .copyToRepo{
+      width: 120px;
+    }
+    #filter-label {
+      width: 50px;
+      text-align: left;
+    }
     </style>
     <link rel="shortcut icon" type="image/png" href="https://res.de.dariah.eu/aai/img/page_icon.png" />
   </head>
@@ -47,6 +58,15 @@
                 </div>
               </form>
 
+
+              <form class="form-horizontal">
+                <div class="form-group">
+                  <label class="control-label" id="filter-label">Filter</label>
+                  <input class="form-control" type="text" name="search.name" value="" id="id_search_packagename" placeholder="Package Name" ng-model="search.Package" autofocus />
+                  <input class="form-control" type="text" name="search.version" value="" id="id_search_packageversion" placeholder="Package Version" ng-model="search.Version" autofocus />
+                </div>
+              </form>
+
               <table id="maintable">
 
                 <tr>
@@ -58,13 +78,13 @@
 
                 <tr><th colspan="4"><hr></th></tr>
 
-                <tr ng-repeat="package in packages[currentrepo]">
+                <tr ng-repeat="package in packages[currentrepo] | filter:search | orderBy : ['Package', 'Version']">
                   <td>{{ package.Package }}</td>
                   <td>{{ package.Version }}</td>
                   
                   <td>
                     <form class="form-inline">
-                      <select id="copyToRepo" ng-model="targetrepo">
+                      <select class="copyToRepo" ng-model="targetrepo">
                         <option ng-repeat="(otherreponame,otherrepopackages) in packages" ng-if="!containsPackageKey(otherrepopackages,package.Key)" value="{{ otherreponame }}">{{ otherreponame }}</option>
                       </select> 
                       <button ng-click="copyPackageToRepo(package,targetrepo)" ng-disabled="targetrepo == undefined"><span class="fa fa-share"></span></button>
