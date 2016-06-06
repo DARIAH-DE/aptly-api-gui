@@ -64,47 +64,50 @@
                 </div>
               </form>
 
+              <div id="showmaintable" ng-if="currentrepo.length > 0"><!--don't show the main table unless a repo is selected-->
 
-              <form class="form-horizontal" ng-if="currentrepo.length > 0">
-                <div class="form-group">
-                  <label class="control-label" id="filter-label">Filter</label>
-                  <input class="form-control" type="text" name="search.name" value="" id="id_search_packagename" placeholder="Package Name" ng-model="search.Package" autofocus />
-                  <input class="form-control" type="text" name="search.version" value="" id="id_search_packageversion" placeholder="Package Version" ng-model="search.Version" autofocus />
-                </div>
-              </form>
+                <form class="form-horizontal">
+                  <div class="form-group">
+                    <label class="control-label" id="filter-label">Filter</label>
+                    <input class="form-control" type="text" name="search.name" value="" id="id_search_packagename" placeholder="Package Name" ng-model="search.Package" autofocus />
+                    <input class="form-control" type="text" name="search.version" value="" id="id_search_packageversion" placeholder="Package Version" ng-model="search.Version" autofocus />
+                  </div>
+                </form>
 
-              <table id="maintable" ng-if="currentrepo.length > 0">
+                <table id="maintable">
 
-                <tr>
-                  <th class="tablecol"><a >Package</a></th>
-                  <th class="tablecol"><a >Version</a></th>
-                  <th class="tablecol"><a >Copy</a></th>
-                  <th><a >Delete</a></th>
-                </tr>
+                  <tr>
+                    <th class="tablecol"><a >Package</a></th>
+                    <th class="tablecol"><a >Version</a></th>
+                    <th class="tablecol"><a >Copy</a></th>
+                    <th><a >Delete</a></th>
+                  </tr>
 
-                <tr><th colspan="4"><hr></th></tr>
+                  <tr><th colspan="4"><hr></th></tr>
 
-                <tr ng-repeat="package in packages[currentrepo] | filter:search | orderBy : ['Package', 'Version']">
-                  <td class="tablecol">{{ package.Package }}</td>
-                  <td class="tablecol">{{ package.Version }}</td>
-                  
-                  <td class="tablecol">
-                    <form class="form-inline">
-                      <select class="copyToRepo" ng-model="targetrepo">
-                        <option ng-repeat="(otherreponame,otherrepopackages) in packages" ng-if="!containsPackageKey(otherrepopackages,package.Key)" value="{{ otherreponame }}">{{ otherreponame }}</option>
-                      </select> 
-                      <button ng-click="copyPackageToRepo(package,targetrepo)" ng-disabled="targetrepo == undefined"><span class="fa fa-share"></span></button>
-                    </form>
-                  </td>
-                  <td>
-                    <button ng-click="deletePackage(currentrepo,package);"><span class="fa fa-trash"></span></button>
-                    <input id="'{{package.Key}}'" ng-checked="deletepackages[currentrepo].indexOf(fruitName) > -1" ng-click="toggleDeleteSelection(currentrepo,package.Key)" type="checkbox">
-                  </td>
-                </tr>
+                  <tr ng-repeat="package in packages[currentrepo] | filter:search | orderBy : ['Package', 'Version']">
+                    <td class="tablecol">{{ package.Package }}</td>
+                    <td class="tablecol">{{ package.Version }}</td>
+                    
+                    <td class="tablecol">
+                      <form class="form-inline">
+                        <select class="copyToRepo" ng-model="targetrepo">
+                          <option ng-repeat="(otherreponame,otherrepopackages) in packages" ng-if="!containsPackageKey(otherrepopackages,package.Key)" value="{{ otherreponame }}">{{ otherreponame }}</option>
+                        </select> 
+                        <button ng-click="copyPackageToRepo(package,targetrepo)" ng-disabled="targetrepo == undefined"><span class="fa fa-share"></span></button>
+                      </form>
+                    </td>
+                    <td>
+                      <button ng-click="deletePackage(currentrepo,package);"><span class="fa fa-trash"></span></button>
+                      <input id="'{{package.Key}}'" ng-checked="deletepackages[currentrepo].indexOf(fruitName) > -1" ng-click="toggleDeleteSelection(currentrepo,package.Key)" type="checkbox">
+                    </td>
+                  </tr>
 
-                <tr><th colspan="4"><hr></th></tr>
+                  <tr><th colspan="4"><hr></th></tr>
 
-              </table>
+                </table>
+
+              </div> <!--id="showmaintable"-->
 
               <form>
                 <button class="deleteform" ng-disabled="deletepackages[currentrepo].length < 1" ng-if="currentrepo.length > 0"  ng-click="deletePackages(currentrepo);"><span class="fa fa-trash"></span> Delete Selection</button>
@@ -129,18 +132,18 @@
                 </form>
               </div>
 
-            </div>
+            </div> <!--  data-ng-controller="ctrl1" -->
             <div class="row central_logo_de"></div>
           </div>
-        </div>
-      </div>
+        </div> <!-- id="content" -->
+      </div><!-- class="span8 main-content-wrapper" -->
       <div class="row dfooter footer">
         <div class="span7">
           <hr/>
           <p>Digital Research Infrastructure for the Arts and Humanities.</p>
         </div>
       </div>
-    </div>
+    </div><!-- id="content_layout" -->
     <script type="text/javascript" src="https://res.de.dariah.eu/aai/js/jquery-1.8.2.js"></script>
     <script type="text/javascript" src="https://res.de.dariah.eu/aai/js/bootstrap.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
