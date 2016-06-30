@@ -1,0 +1,30 @@
+[ng\:cloak], [ng-cloak], .ng-cloak {
+  display: none;
+}
+form , .form-horizontal .control-group {
+  margin: 0;
+}
+#content_layout {
+  top: 55px;
+}
+#mainselection {
+  margin-bottom: 30px;
+}
+#globalfunctions {
+  margin-top: 30px;
+}
+input {
+  width: 120px;
+  padding-right: 10px;
+}
+.copyToRepo{
+  width: 120px;
+}
+#filter-label {
+  width: 50px;
+  text-align: left;
+}
+.tablecol{
+  padding-right:5px;
+}
+

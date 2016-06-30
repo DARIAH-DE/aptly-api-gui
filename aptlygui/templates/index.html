@@ -13,37 +13,74 @@
     <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/bootstrap-modal.css" type="text/css" media="screen, projection" />
     <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/font-awesome.css">
     <link rel="stylesheet" href="https://res.de.dariah.eu/aai/css/dariah_portal.css" type="text/css" media="screen, projection" />
-    <style>
-    [ng\:cloak], [ng-cloak], .ng-cloak {
-      display: none;
-    }
-    form , .form-horizontal .control-group {
-      margin: 0;
-    }
-    #mainselection {
-      margin-bottom: 30px;
-    }
-    #globalfunctions {
-      margin-top: 30px;
-    }
-    input {
-      width: 120px;
-      padding-right: 10px;
-    }
-    .copyToRepo{
-      width: 120px;
-    }
-    #filter-label {
-      width: 50px;
-      text-align: left;
-    }
-    .tablecol{
-      padding-right:5px;
-    }
-    </style>
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/aptlygui.css')}}">
     <link rel="shortcut icon" type="image/png" href="https://res.de.dariah.eu/aai/img/page_icon.png" />
   </head>
   <body>
+     <div class="navbar navbar-inverse navbar-static-top navbar-dariah" id="top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <div class="row-fluid">
+            <div class="span1"></div>
+            <div class="span10">
+              <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </a>
+              <div class="nav-collapse collapse">
+                <ul class="nav pull-right">
+                  <li>
+                    <li>
+{% if username != None %}
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa-user icon-white"></i>
+                  {{ username }} <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a href="{{ url_for('logout') }}"><i class="fa-sign-out icon-white"></i> Logout</a></li>
+                </ul>
+{% else %}
+                      <a href="{{ url_for('sso_login') }}" ><i class="icon-signin icon-white"></i> Login</a>
+{% endif %}
+
+                    </li>
+                  </li>
+                </ul>
+                <ul class="nav">
+                  <!--
+                  Don't change this section!
+                  -->
+                  <li id="home_button" class="dropdown">
+                    <a class="brand dropdown-toggle" data-toggle="dropdown" href="#">
+                      <span class="caret"></span>
+                      DARIAH-DE
+                    </a>
+                    <ul id="home_dropdown_menu" class="dropdown-menu">
+                      <li class="dropdown-submenu">
+                          <a tabindex="-1" href="#">DARIAH-DE</a>
+                          <ul class="dropdown-menu">
+                            <li><a href="http://de.dariah.eu">DARIAH-DE Home</a></li>
+                            <li class="divider"></li>
+                            <li><a href="http://textgrid.de/ ">TextGrid</a></li>
+                          </ul>
+                        </li>
+                      <li class="divider"></li>
+                      <li class="dropdown-submenu">
+                          <a tabindex="-1" href="#">DARIAH-EU</a>
+                          <ul class="dropdown-menu">
+                            <li><a href="http://www.dariah.eu/">DARIAH-EU Home</a></li>
+                          </ul>
+                        </li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+{% raw %}
     <div id="content_layout">
       <div class="span8 main-content-wrapper">
         <div id="content" class="primary-area">
@@ -58,7 +95,7 @@
                   <div class="controls">
                     <select id="selectRepo" ng-model="currentrepo">
                       <option ng-repeat="repo in repos" value="{{ repo.Name }}">{{ repo.Comment }} ({{ repo.Name }})</option>
-                    </select> 
+                    </select>
                    <button ng-click="loadData();" id="reload"><span class="fa fa-refresh"></span></button>
                   </div>
                 </div>
@@ -88,12 +125,12 @@
                   <tr ng-repeat="package in packages[currentrepo] | filter:search | orderBy : ['Package', 'Version']">
                     <td class="tablecol">{{ package.Package }}</td>
                     <td class="tablecol">{{ package.Version }}</td>
-                    
+
                     <td class="tablecol">
                       <form class="form-inline">
                         <select class="copyToRepo" ng-model="targetrepo">
                           <option ng-repeat="(otherreponame,otherrepopackages) in packages" ng-if="!containsPackageKey(otherrepopackages,package.Key)" value="{{ otherreponame }}">{{ otherreponame }}</option>
-                        </select> 
+                        </select>
                         <button ng-click="copyPackageToRepo(package,targetrepo)" ng-disabled="targetrepo == undefined"><span class="fa fa-share"></span></button>
                       </form>
                     </td>
@@ -144,150 +181,13 @@
         </div>
       </div>
     </div><!-- id="content_layout" -->
+{% endraw %}
     <script type="text/javascript" src="https://res.de.dariah.eu/aai/js/jquery-1.8.2.js"></script>
     <script type="text/javascript" src="https://res.de.dariah.eu/aai/js/bootstrap.js"></script>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular-filter/0.5.8/angular-filter.min.js"></script>
-    <script type="text/javascript">
-var aptlyApiGui = angular.module("aptlyapigui", ['angular.filter']);
-
-aptlyApiGui.controller('ctrl1', function($scope,$http) {
-
-  $scope.deletepackages = {}
-  $scope.toggleDeleteSelection = function (repo,key) {
-    var idx = $scope.deletepackages[repo].indexOf(key);
-    if ( idx > -1) {
-      $scope.deletepackages[repo].splice(idx, 1);
-    } else {
-      $scope.deletepackages[repo].push(key);
-    }
-  };
-
-  // update the published repos
-  $scope.publishUpdate = function () {
-
-    // get all published repos
-    $http.get('api/publish').
-      success(function(publishedrepos, status, headers, config) {
-        publishedrepos.forEach(function(pubrepo) {
-          // the root prefix is a special case
-          if (pubrepo.Prefix == '.') {
-            repoprefix = ':.'
-          } else {
-            repoprefix = pubrepo.Prefix
-          }
-
-          console.log('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution))
-
-          // re-publish the repo
-          $http.put('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution), {headers:{'Content-Type':'application/json'}, data:{}}).
-            success(function(data, status, headers, config) {
-          }).
-          error(function(repodata, status, headers, config) {
-            alert('Failed to update published repos!');
-          });
-
-        });
-
-      }).
-      error(function(publishedrepos, status, headers, config) {
-        alert('Failed to load published repos!');
-      });    
-
-  };
-
-  // check whether package is in a repo
-  $scope.containsPackageKey = function(repohash,packagekey) {
-    var foundkey = false;
-    repohash.forEach(function(onepackage){
-      if (onepackage['Key'] == packagekey) {
-        foundkey = true;
-      };
-    });
-    return foundkey;
-  }
-
-  // API call to copy package to another repo
-  $scope.copyPackageToRepo = function (package,targetrepo) {
-    // security confirmation
-    if (confirm("Really copy "+package.Package+" "+package.Version+" to "+targetrepo+"?")) {
-      $http.post('api/repos/'+encodeURIComponent(targetrepo)+'/packages', {"PackageRefs": [package.Key]}).
-        success(function(data, status, headers, config) {
-          $scope.loadData();
-        }).
-        error(function(repodata, status, headers, config) {
-          alert("Failed to copy "+package.Package+" "+package.Version+" to "+targetrepo+"!");
-        });
-
-    }
-  };
-
-  // load data from api
-  $scope.loadData = function () {
-    // get repos
-    $http.get('api/repos').
-      success(function(data, status, headers, config) {
-        $scope.repos = data;
-        packages = {}
-
-        // for each repo, get the repo details
-        $scope.repos.forEach(function(repo) {
-
-            $http.get('api/repos/'+encodeURIComponent(repo.Name)+'/packages?format=details').
-              success(function(repodata, status, headers, config) {
-                packages[repo.Name]=repodata;
-                $scope.deletepackages[repo.Name]=[];
-              }).
-              error(function(repodata, status, headers, config) {
-                alert("Error loading data!!");
-              });
-
-        });
-        $scope.packages = packages;
-
-      }).
-      error(function(data, status, headers, config) {
-        alert("Error loading data!!");
-      });
-  };
-
-  // initial load
-  $scope.loadData();
-
-  // delete single package from a repo
-  $scope.deletePackage = function (reponame,package) {
-    // security confirmation
-    if (confirm("Really delete "+package.Package+" v. "+package.Version+"?")) {
-      // API call
-      $scope.deletePackagesAPICall(reponame,[package.Key]);
-    }
-  };
-
-  // delete multiple packages from a repo
-  $scope.deletePackages = function (reponame) {
-    // security confirmation
-    if (confirm("Really delete "+$scope.deletepackages[reponame].length+" packages from repository "+reponame+"?")) {
-      // API call
-      $scope.deletePackagesAPICall(reponame,$scope.deletepackages[reponame]);
-    }
-  };
-
-  // delete packages from a repo
-  $scope.deletePackagesAPICall = function (reponame,packagerefs) {
-    // API call
-    $http.delete('api/repos/'+reponame+'/packages', {headers:{'Content-Type':'application/json'}, data:{"PackageRefs": packagerefs}}).
-      success(function(data, status, headers, config) {
-        $scope.loadData();
-      }).
-      error(function(repodata, status, headers, config) {
-        alert("Error deleting package!");
-      });
-  };
-
-
-});
-    </script>
+    <script type="text/javascript" src="https://res.de.dariah.eu/globalmenu/globalmenu.js"></script>
+    <script src="{{ url_for('static', filename='js/angular.min.1.5.3.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/angular-filter.min.0.5.8.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/aptlygui.js')}}"></script>
   </body>
 </html>
-
 
