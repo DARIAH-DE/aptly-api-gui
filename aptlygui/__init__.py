@@ -20,7 +20,7 @@ aptlygui flask app providing a gui for aptly repo api
 import requests, json
 from datetime import datetime
 
-from flask import Flask, Response, session, request, redirect, render_template, jsonify
+from flask import Flask, Response, session, request, redirect, render_template, jsonify, url_for
 from flask_sso import SSO
 
 app = Flask(__name__)
@@ -81,12 +81,12 @@ def maypublish():
 @ext.login_handler
 def login(user_info):
     session['user'] = user_info
-    return redirect('/')
+    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
     session.pop('user')
-    return redirect('/')
+    return redirect(url_for('index'))
 
 @app.route('/api/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def apicall(path):
