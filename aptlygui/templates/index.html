@@ -101,6 +101,8 @@
                 </div>
               </form>
 
+              {{ repos }}
+
               <div id="showmaintable" ng-if="currentrepo.length > 0"><!--don't show the main table unless a repo is selected-->
 
                 <form class="form-horizontal">
@@ -117,7 +119,7 @@
                     <th class="tablecol"><a >Package</a></th>
                     <th class="tablecol"><a >Version</a></th>
                     <th class="tablecol"><a >Copy</a></th>
-                    <th><a >Delete</a></th>
+                    <th><a ng-if="writeaccessToRepo(currentrepo)">Delete</a></th>
                   </tr>
 
                   <tr><th colspan="4"><hr></th></tr>
@@ -129,14 +131,14 @@
                     <td class="tablecol">
                       <form class="form-inline">
                         <select class="copyToRepo" ng-model="targetrepo">
-                          <option ng-repeat="(otherreponame,otherrepopackages) in packages" ng-if="!containsPackageKey(otherrepopackages,package.Key)" value="{{ otherreponame }}">{{ otherreponame }}</option>
+                          <option ng-repeat="(otherreponame,otherrepopackages) in packages" ng-if="!containsPackageKey(otherrepopackages,package.Key) && writeaccessToRepo(otherreponame)" value="{{ otherreponame }}">{{ otherreponame }}</option>
                         </select>
                         <button ng-click="copyPackageToRepo(package,targetrepo)" ng-disabled="targetrepo == undefined"><span class="fa fa-share"></span></button>
                       </form>
                     </td>
                     <td>
-                      <button ng-click="deletePackage(currentrepo,package);"><span class="fa fa-trash"></span></button>
-                      <input id="'{{package.Key}}'" ng-checked="deletepackages[currentrepo].indexOf(fruitName) > -1" ng-click="toggleDeleteSelection(currentrepo,package.Key)" type="checkbox">
+                      <button ng-click="deletePackage(currentrepo,package);" ng-if="writeaccessToRepo(currentrepo)"><span class="fa fa-trash"></span></button>
+                      <input id="'{{package.Key}}'" ng-if="writeaccessToRepo(currentrepo)" ng-checked="deletepackages[currentrepo].indexOf(fruitName) > -1" ng-click="toggleDeleteSelection(currentrepo,package.Key)" type="checkbox">
                     </td>
                   </tr>
 
@@ -147,11 +149,11 @@
               </div> <!--id="showmaintable"-->
 
               <form>
-                <button class="deleteform" ng-disabled="deletepackages[currentrepo].length < 1" ng-if="currentrepo.length > 0"  ng-click="deletePackages(currentrepo);"><span class="fa fa-trash"></span> Delete Selection</button>
+                <button class="deleteform" ng-disabled="deletepackages[currentrepo].length < 1" ng-if="currentrepo.length > 0 && writeaccessToRepo(currentrepo)"  ng-click="deletePackages(currentrepo);"><span class="fa fa-trash"></span> Delete Selection</button>
               </form>
 
               <div id="globalfunctions">
-                <form class="form-horizontal">
+                <form class="form-horizontal" ng-if="user['maypublish']">
                   <div class="control-group">
                     <label class="control-label" for="refreshRepo">Re-Publish</label>
                     <div class="controls">

@@ -91,7 +91,14 @@ def logout():
 @app.route('/api/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def apicall(path):
     ret = ''
-    if request.method == 'GET' and path == 'repos':
+    if request.method == 'GET' and path == 'user':
+        userdata = { 'user': None }
+        if 'user' in session:
+            userdata['user'] = session['user'].get('username')
+        userdata['admin'] = userisadmin()
+        userdata['maypublish'] = maypublish()
+        ret = Response(response=json.dumps(userdata), status=200, mimetype='application/json')
+    elif request.method == 'GET' and path == 'repos':
         '''allow to GET the repo list but add writablility-info'''
         response = requests.get(app.config['API_URL']+'/repos')
         if response.status_code != 200:

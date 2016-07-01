@@ -33,7 +33,7 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
     // get all published repos
     $http.get('api/publish').
-      success(function(publishedrepos, status, headers, config) {
+      success(function(publishedrepos) {
         publishedrepos.forEach(function(pubrepo) {
           // the root prefix is a special case
           if (pubrepo.Prefix == '.') {
@@ -46,9 +46,9 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
           // re-publish the repo
           $http.put('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution), {headers:{'Content-Type':'application/json'}, data:{}}).
-            success(function(data, status, headers, config) {
+            success(function() {
           }).
-          error(function(repodata, status, headers, config) {
+          error(function() {
             alert('Failed to update published repos!');
           });
 
@@ -77,21 +77,31 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
     // security confirmation
     if (confirm("Really copy "+package.Package+" "+package.Version+" to "+targetrepo+"?")) {
       $http.post('api/repos/'+encodeURIComponent(targetrepo)+'/packages', {"PackageRefs": [package.Key]}).
-        success(function(data, status, headers, config) {
+        success(function() {
           $scope.loadData();
         }).
-        error(function(repodata, status, headers, config) {
+        error(function() {
           alert("Failed to copy "+package.Package+" "+package.Version+" to "+targetrepo+"!");
         });
-
     }
+  };
+
+  // Check whether a certain repo is writable for the current user
+  $scope.writeaccessToRepo = function (repo) {
+    var ret = false;
+    $scope.repos.forEach(function(onerepo){
+      if (onerepo.Name == repo){
+        ret = onerepo.Writable;
+      }
+    });
+    return ret;
   };
 
   // load data from api
   $scope.loadData = function () {
     // get repos
     $http.get('api/repos').
-      success(function(data, status, headers, config) {
+      success(function(data) {
         $scope.repos = data;
         packages = {}
 
@@ -99,11 +109,11 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
         $scope.repos.forEach(function(repo) {
 
             $http.get('api/repos/'+encodeURIComponent(repo.Name)+'/packages?format=details').
-              success(function(repodata, status, headers, config) {
+              success(function(repodata) {
                 packages[repo.Name]=repodata;
                 $scope.deletepackages[repo.Name]=[];
               }).
-              error(function(repodata, status, headers, config) {
+              error(function() {
                 alert("Error loading data!!");
               });
 
@@ -111,8 +121,16 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
         $scope.packages = packages;
 
       }).
-      error(function(data, status, headers, config) {
+      error(function() {
         alert("Error loading data!!");
+      });
+    // get user data
+    $http.get('api/user').
+      success(function(data) {
+        $scope.user = data;
+      }).
+      error(function() {
+        alert("Error loading user data!!");
       });
   };
 
@@ -141,10 +159,10 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
   $scope.deletePackagesAPICall = function (reponame,packagerefs) {
     // API call
     $http.delete('api/repos/'+reponame+'/packages', {headers:{'Content-Type':'application/json'}, data:{"PackageRefs": packagerefs}}).
-      success(function(data, status, headers, config) {
+      success(function() {
         $scope.loadData();
       }).
-      error(function(repodata, status, headers, config) {
+      error(function() {
         alert("Error deleting package!");
       });
   };
