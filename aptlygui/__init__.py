@@ -122,35 +122,27 @@ def apicall(path):
             ret = Response(response=json.dumps(response.json()), status=200, mimetype='application/json')
         else:
             raise InvalidAPIUsage('Access denied.', status_code=403)
-    else:
-        if path.startswith('repos/'):
-            repo = path[6:]
-            if repo.find('/'):
-                repo = repo[0:repo.find('/')]
-            if writeaccesstorepo(repo):
-                if request.method == 'POST':
-                    response = requests.post(app.config['API_URL']+'/'+path, headers={'content-type': 'application/json'}, data=request.data)
-                    app.logger.error(app.config['API_URL']+'/'+path)
-                    app.logger.error(request.headers)
-                    app.logger.error(request.get_json())
-                    if response.status_code != 200:
-                        app.logger.error(response)
-                        raise InvalidAPIUsage('There was a back end error!', status_code=response.status_code)
-                    ret = Response(response=json.dumps(response.json()), status=200, mimetype='application/json')
-                elif request.method == 'DELETE':
-                    response = requests.delete(app.config['API_URL']+'/'+path, headers=request.headers, data=request.data)
-                    app.logger.error(app.config['API_URL']+'/'+path)
-                    app.logger.error(request.headers)
-                    app.logger.error(request.get_json())
-                    if response.status_code != 200:
-                        raise InvalidAPIUsage('There was a back end error!', status_code=response.status_code)
-                    ret = Response(response=json.dumps(response.json()), status=200, mimetype='application/json')
-                else:
-                    raise InvalidAPIUsage('Unknown request!', status_code=400)
-            else:
-                raise InvalidAPIUsage('Access denied.', status_code=403)
+    elif path.startswith('repos/'):
+        repo = path[6:]
+        # extract the repo name from the full url
+        if repo.find('/'):
+            repo = repo[0:repo.find('/')]
+        if not (writeaccesstorepo(repo)):
+            raise InvalidAPIUsage('Access denied.', status_code=403)
+        elif request.method == 'POST':
+            response = requests.post(app.config['API_URL']+'/'+path, headers={'content-type': 'application/json'}, data=request.data)
+            if response.status_code != 200:
+                raise InvalidAPIUsage('There was a back end error!', status_code=response.status_code)
+            ret = Response(response=json.dumps(response.json()), status=200, mimetype='application/json')
+        elif request.method == 'DELETE':
+            response = requests.delete(app.config['API_URL']+'/'+path, headers=request.headers, data=request.data)
+            if response.status_code != 200:
+                raise InvalidAPIUsage('There was a back end error!', status_code=response.status_code)
+            ret = Response(response=json.dumps(response.json()), status=200, mimetype='application/json')
         else:
-            raise InvalidAPIUsage('Something wrong!', status_code=400)
+            raise InvalidAPIUsage('Unknown request!', status_code=400)
+    else:
+        raise InvalidAPIUsage('Something wrong!', status_code=400)
     return ret
 
 

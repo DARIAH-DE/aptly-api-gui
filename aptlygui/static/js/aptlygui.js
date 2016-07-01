@@ -36,13 +36,12 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
       success(function(publishedrepos) {
         publishedrepos.forEach(function(pubrepo) {
           // the root prefix is a special case
-          if (pubrepo.Prefix == '.') {
+          var repoprefix;
+          if (pubrepo.Prefix === '.') {
             repoprefix = ':.'
           } else {
             repoprefix = pubrepo.Prefix
           }
-
-          console.log('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution))
 
           // re-publish the repo
           $http.put('api/publish/'+encodeURIComponent(repoprefix)+'/'+encodeURIComponent(pubrepo.Distribution), {headers:{'Content-Type':'application/json'}, data:{}}).
@@ -65,7 +64,7 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
   $scope.containsPackageKey = function(repohash,packagekey) {
     var foundkey = false;
     repohash.forEach(function(onepackage){
-      if (onepackage['Key'] == packagekey) {
+      if (onepackage['Key'] === packagekey) {
         foundkey = true;
       };
     });
@@ -90,7 +89,7 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
   $scope.writeaccessToRepo = function (repo) {
     var ret = false;
     $scope.repos.forEach(function(onerepo){
-      if (onerepo.Name == repo){
+      if (onerepo.Name === repo){
         ret = onerepo.Writable;
       }
     });
@@ -103,7 +102,7 @@ aptlyApiGui.controller('ctrl1', function($scope,$http) {
     $http.get('api/repos').
       success(function(data) {
         $scope.repos = data;
-        packages = {}
+        var packages = {}
 
         // for each repo, get the repo details
         $scope.repos.forEach(function(repo) {
