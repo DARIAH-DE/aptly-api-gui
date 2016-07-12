@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-var aptlyApiGui = angular.module("aptlyapigui", ['angular.filter']);
+var aptlyApiGui = angular.module('aptlyapigui', ['angular.filter']);
 
 aptlyApiGui.controller('ctrl1', function($scope,$http) {
 
